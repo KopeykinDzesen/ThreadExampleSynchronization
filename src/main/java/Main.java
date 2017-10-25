@@ -1,20 +1,19 @@
+import com.sun.org.apache.regexp.internal.RE;
+
 public class Main {
 
     public static void main(String[] args) throws Exception {
 
-        Resource resource = new Resource();
-        resource.setI(5);
+        ResourceStatic.i = 5;
         MyThread myThread = new MyThread();
         myThread.setName("one");
         MyThread myThread1 = new MyThread();
-        myThread.setResource(resource);
-        myThread1.setResource(resource);
         myThread.start();
         myThread1.start();
         myThread.join();
         myThread1.join();
 
-        System.out.println(resource.getI());
+        System.out.println(ResourceStatic.i);
 
     }
 
@@ -23,13 +22,10 @@ public class Main {
 class  MyThread extends Thread{
     Resource resource;
 
-    public void setResource(Resource resource) {
-        this.resource = resource;
-    }
-
     @Override
     public void run() {
-        resource.changeI();
+        ResourceStatic.changeIStatic();
+        new ResourceStatic().changeI();
     }
 }
 
@@ -44,12 +40,38 @@ class Resource{
         this.i = i;
     }
 
-    public synchronized void changeI(){
+    public void changeI(){
         int i = this.i;
-        if(Thread.currentThread().getName().equals("one")){
+        if (Thread.currentThread().getName().equals("one")) {
             Thread.yield();
         }
         i++;
         this.i = i;
+    }
+}
+
+class ResourceStatic{
+    public static int i;
+
+    public static void changeIStatic(){
+        synchronized (Resource.class){
+            int i = ResourceStatic.i;
+            if(Thread.currentThread().getName().equals("one")){
+                Thread.yield();
+            }
+            i++;
+            ResourceStatic.i = i;
+        }
+    }
+
+    public void changeI(){
+        synchronized (this) {
+            int i = ResourceStatic.i;
+            if (Thread.currentThread().getName().equals("one")) {
+                Thread.yield();
+            }
+            i++;
+            ResourceStatic.i = i;
+        }
     }
 }
